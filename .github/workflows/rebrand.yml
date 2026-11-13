@@ -25,10 +25,12 @@ jobs:
       - name: Install Android tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y apktool apksigner zipalign imagemagick python3
+          sudo apt-get install -y default-jre-headless apksigner zipalign imagemagick python3
+          curl -fL --retry 3 -o apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
+          java -jar apktool.jar --version
 
       - name: Decode APK
-        run: apktool d -f "Disney+.apk" -o decoded
+        run: java -jar apktool.jar d -f "Disney+.apk" -o decoded
 
       - name: Apply requested branding
         run: |
@@ -68,7 +70,7 @@ jobs:
           convert "IMG_20261112_123115_574.jpg" -resize 512x512^ -gravity center -extent 512x512 decoded/res/drawable/sr_mods_icon.png
 
       - name: Rebuild APK
-        run: apktool b decoded -o SR-MODS-unsigned.apk
+        run: java -jar apktool.jar b decoded -o SR-MODS-unsigned.apk
 
       - name: Align and sign
         run: |
