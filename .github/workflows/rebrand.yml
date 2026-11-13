@@ -65,7 +65,7 @@ jobs:
 
           (root / "res" / "drawable").mkdir(parents=True, exist_ok=True)
           PY
-          magick "IMG_20261112_123115_574.jpg" -resize 512x512^ -gravity center -extent 512x512 decoded/res/drawable/sr_mods_icon.png
+          convert "IMG_20261112_123115_574.jpg" -resize 512x512^ -gravity center -extent 512x512 decoded/res/drawable/sr_mods_icon.png
 
       - name: Rebuild APK
         run: apktool b decoded -o SR-MODS-unsigned.apk
