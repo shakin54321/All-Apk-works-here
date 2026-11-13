@@ -6,7 +6,6 @@ on:
     paths:
       - "Disney+.apk"
       - "28729.jpg"
-      - ".github/workflows/rebrand.yml"
 
 permissions:
   contents: read
@@ -36,6 +35,7 @@ jobs:
           from pathlib import Path
           import re
           import xml.etree.ElementTree as ET
+
           root = Path("decoded")
           manifest = root / "AndroidManifest.xml"
           tree = ET.parse(manifest)
@@ -48,14 +48,10 @@ jobs:
           app.set(ns + "roundIcon", "@drawable/sr_mods_icon")
           tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
-          # Replace Telegram invite/channel URLs wherever apktool decoded them.
-          pattern = re.compile(r"https?://(?:www\\.)?(?:t\\.me|telegram\\.me)/[^\\s\\\"'<>\\\\]+", re.I)
+          # Replace Telegram links in decoded app text and smali sources.
+          pattern = re.compile(r"""https?://(?:www[.])?(?:t[.]me|telegram[.]me)/[^\s"'<>\\]+""", re.I)
           replacement = "https://t.me/sr_panel_zone"
-          for base in (root / "smali", root / "smali_classes2", root / "smali_classes3",
-                       root / "smali_classes4", root / "smali_classes5", root / "smali_classes6",
-                       root / "res", root / "assets"):
-              if not base.exists():
-                  continue
+          for base in [p for p in root.iterdir() if p.is_dir() and (p.name.startswith("smali") or p.name in {"res", "assets"})]:
               for p in base.rglob("*"):
                   if p.is_file() and p.suffix.lower() in {".smali", ".xml", ".json", ".txt", ".html", ".js", ".properties", ".cfg"}:
                       try:
