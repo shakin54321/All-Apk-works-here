@@ -6,6 +6,7 @@ on:
     paths:
       - "Disney+.apk"
       - "IMG_20261112_123115_574.jpg"
+      - ".github/workflows/rebrand.yml"
 
 permissions:
   contents: read
