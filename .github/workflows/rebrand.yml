@@ -1,0 +1,88 @@
+name: Build SR MODS APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Disney+.apk"
+      - "28729.jpg"
+      - ".github/workflows/rebrand.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  rebrand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check input files
+        run: |
+          test -f "Disney+.apk" || { echo "Missing Disney+.apk"; exit 1; }
+          test -f "28729.jpg" || { echo "Missing 28729.jpg"; exit 1; }
+
+      - name: Install Android tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apktool apksigner zipalign imagemagick python3
+
+      - name: Decode APK
+        run: apktool d -f "Disney+.apk" -o decoded
+
+      - name: Apply requested branding
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import xml.etree.ElementTree as ET
+          root = Path("decoded")
+          manifest = root / "AndroidManifest.xml"
+          tree = ET.parse(manifest)
+          app = tree.getroot().find("application")
+          if app is None:
+              raise SystemExit("AndroidManifest.xml has no application element")
+          ns = "{http://schemas.android.com/apk/res/android}"
+          app.set(ns + "label", "SR MODS")
+          app.set(ns + "icon", "@drawable/sr_mods_icon")
+          app.set(ns + "roundIcon", "@drawable/sr_mods_icon")
+          tree.write(manifest, encoding="utf-8", xml_declaration=True)
+
+          # Replace Telegram invite/channel URLs wherever apktool decoded them.
+          pattern = re.compile(r"https?://(?:www\\.)?(?:t\\.me|telegram\\.me)/[^\\s\\\"'<>\\\\]+", re.I)
+          replacement = "https://t.me/sr_panel_zone"
+          for base in (root / "smali", root / "smali_classes2", root / "smali_classes3",
+                       root / "smali_classes4", root / "smali_classes5", root / "smali_classes6",
+                       root / "res", root / "assets"):
+              if not base.exists():
+                  continue
+              for p in base.rglob("*"):
+                  if p.is_file() and p.suffix.lower() in {".smali", ".xml", ".json", ".txt", ".html", ".js", ".properties", ".cfg"}:
+                      try:
+                          s = p.read_text(encoding="utf-8")
+                      except (UnicodeDecodeError, OSError):
+                          continue
+                      updated = pattern.sub(replacement, s)
+                      if updated != s:
+                          p.write_text(updated, encoding="utf-8")
+
+          (root / "res" / "drawable").mkdir(parents=True, exist_ok=True)
+          PY
+          magick "28729.jpg" -resize 512x512^ -gravity center -extent 512x512 decoded/res/drawable/sr_mods_icon.png
+
+      - name: Rebuild APK
+        run: apktool b decoded -o SR-MODS-unsigned.apk
+
+      - name: Align and sign
+        run: |
+          keytool -genkeypair -v -keystore sr-mods-release.jks -storepass srmodspass -keypass srmodspass -alias srmods -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=SR MODS, OU=App, O=SR MODS, L=Dhaka, S=Dhaka, C=BD"
+          zipalign -p -f 4 SR-MODS-unsigned.apk SR-MODS-aligned.apk
+          apksigner sign --ks sr-mods-release.jks --ks-pass pass:srmodspass --key-pass pass:srmodspass --out SR-MODS.apk SR-MODS-aligned.apk
+          apksigner verify --verbose SR-MODS.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SR-MODS-APK
+          path: SR-MODS.apk
+          retention-days: 14
