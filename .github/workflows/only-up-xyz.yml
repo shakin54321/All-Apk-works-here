@@ -18,11 +18,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Android tools
+      - name: Install Apktool
         run: |
           sudo apt-get update
-          sudo apt-get install -y apktool imagemagick zipalign apksigner
+          sudo apt-get install -y apktool imagemagick
           mkdir -p work output
+
+      - name: Set up Android build tools
+        uses: android-actions/setup-android@v3
+
+      - name: Install build-tools
+        run: |
+          sdkmanager "build-tools;35.0.0"
+          echo "$ANDROID_HOME/build-tools/35.0.0" >> "$GITHUB_PATH"
 
       - name: Decode XYZ APK
         run: |
@@ -34,12 +42,11 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re, shutil, subprocess, xml.etree.ElementTree as ET
+          import re, subprocess, xml.etree.ElementTree as ET
 
           root = Path("work/decoded")
           logo = Path("file_000000006edc8207a50dbf996378292c.png")
 
-          # Replace only known brand/link strings in decoded text resources.
           replacements = [
               ("https://t.me/", "https://t.me/sr_panel_zone"),
               ("http://t.me/", "https://t.me/sr_panel_zone"),
@@ -49,9 +56,8 @@ jobs:
               ("https://whatsapp.com/channel/", "https://t.me/sr_panel_zone"),
               ("XYZ V2.8", "ONLY UP 1.0"),
               ("XYZ 2.8", "ONLY UP 1.0"),
-              ("XYZ", "ONLY UP"),
           ]
-          text_ext = {".xml", ".json", ".html", ".htm", ".txt", ".properties", ".smali", ".js", ".xml"}
+          text_ext = {".xml", ".json", ".html", ".htm", ".txt", ".properties", ".smali", ".js"}
           for p in root.rglob("*"):
               if not p.is_file() or p.suffix.lower() not in text_ext:
                   continue
@@ -62,12 +68,10 @@ jobs:
               old = s
               for a, b in replacements:
                   s = s.replace(a, b)
-              # Replace common app title resource values and explicit old version labels.
-              s = re.sub(r'(?i)(XYZ\\s*V?2\\.8)', 'ONLY UP 1.0', s)
+              s = re.sub(r"(?i)XYZ\\s*V?2\\.8", "ONLY UP 1.0", s)
               if s != old:
                   p.write_text(s, encoding="utf-8")
 
-          # Update manifest label and preserve existing app components/permissions.
           manifest = root / "AndroidManifest.xml"
           tree = ET.parse(manifest)
           mroot = tree.getroot()
@@ -76,36 +80,31 @@ jobs:
           ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
           tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
-          # Replace launcher icon assets only; do not overwrite arbitrary in-app artwork.
+          # Replace image-based launcher icons only. Adaptive icon XML is preserved.
           candidates = []
           for p in root.rglob("*"):
               if not p.is_file() or p.suffix.lower() not in {".png", ".webp"}:
                   continue
-              n = p.name.lower()
-              parent = str(p.parent).lower()
+              n, parent = p.name.lower(), str(p.parent).lower()
               if ("ic_launcher" in n or "app_icon" in n or "launcher" in n) and ("mipmap" in parent or "drawable" in parent):
                   candidates.append(p)
           for target in candidates:
-              tmp = target.with_suffix(".png")
+              tmp = target.with_name(target.stem + ".onlyup.png")
               subprocess.run(["convert", str(logo), "-resize", "512x512", "-gravity", "center", "-extent", "512x512", str(tmp)], check=True)
               if target.suffix.lower() == ".webp":
-                  webp = target.with_suffix(".webp")
-                  subprocess.run(["convert", str(tmp), str(webp)], check=True)
+                  subprocess.run(["convert", str(tmp), str(target)], check=True)
                   tmp.unlink(missing_ok=True)
               else:
-                  if tmp != target:
-                      tmp.replace(target)
+                  tmp.replace(target)
 
-          # Add a machine-readable inventory for untranslated strings/assets review.
           values = root / "res" / "values"
           inventory = []
           if values.exists():
               for p in values.glob("strings.xml"):
                   inventory.append(p.read_text(encoding="utf-8", errors="replace"))
-          Path("output").mkdir(exist_ok=True)
-          Path("output/strings-inventory.txt").write_text("\\n\\n".join(inventory), encoding="utf-8")
-          Path("output/icon-targets.txt").write_text("\\n".join(str(p) for p in candidates), encoding="utf-8")
-          print(f"Updated launcher asset candidates: {len(candidates)}")
+          Path("output/strings-inventory.txt").write_text("\n\n".join(inventory), encoding="utf-8")
+          Path("output/icon-targets.txt").write_text("\n".join(str(p) for p in candidates), encoding="utf-8")
+          print(f"Updated launcher image assets: {len(candidates)}")
           PY
 
       - name: Build and sign
@@ -115,7 +114,7 @@ jobs:
           keytool -genkeypair -v -keystore output/only-up-debug.keystore -storepass android -keypass android -alias onlyup -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ONLY UP 1.0,O=Shakin Al Mahmud"
           apksigner sign --ks output/only-up-debug.keystore --ks-pass pass:android --key-pass pass:android --out output/ONLY-UP-1.0.apk output/ONLY-UP-aligned.apk
           apksigner verify --verbose output/ONLY-UP-1.0.apk
-          aapt dump badging output/ONLY-UP-1.0.apk | head -n 8 || true
+          aapt dump badging output/ONLY-UP-1.0.apk | head -n 8
 
       - name: Upload build and review files
         uses: actions/upload-artifact@v4
