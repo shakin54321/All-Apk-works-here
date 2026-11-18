@@ -18,19 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Apktool
+      - name: Install Android tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y apktool imagemagick
+          sudo apt-get install -y apktool imagemagick apksigner zipalign aapt
           mkdir -p work output
-
-      - name: Set up Android build tools
-        uses: android-actions/setup-android@v3
-
-      - name: Install build-tools
-        run: |
-          sdkmanager "build-tools;35.0.0"
-          echo "$ANDROID_HOME/build-tools/35.0.0" >> "$GITHUB_PATH"
 
       - name: Decode XYZ APK
         run: |
@@ -46,18 +38,10 @@ jobs:
 
           root = Path("work/decoded")
           logo = Path("file_000000006edc8207a50dbf996378292c.png")
-
-          replacements = [
-              ("https://t.me/", "https://t.me/sr_panel_zone"),
-              ("http://t.me/", "https://t.me/sr_panel_zone"),
-              ("https://telegram.me/", "https://t.me/sr_panel_zone"),
-              ("http://telegram.me/", "https://t.me/sr_panel_zone"),
-              ("https://wa.me/", "https://t.me/sr_panel_zone"),
-              ("https://whatsapp.com/channel/", "https://t.me/sr_panel_zone"),
-              ("XYZ V2.8", "ONLY UP 1.0"),
-              ("XYZ 2.8", "ONLY UP 1.0"),
-          ]
           text_ext = {".xml", ".json", ".html", ".htm", ".txt", ".properties", ".smali", ".js"}
+
+          # Replace complete known social-channel URLs, not URL prefixes.
+          url_pattern = re.compile(r"https?://(?:t\.me|telegram\.me|wa\.me|www\.whatsapp\.com/channel)/[^\\s\"'<>]*", re.I)
           for p in root.rglob("*"):
               if not p.is_file() or p.suffix.lower() not in text_ext:
                   continue
@@ -66,9 +50,9 @@ jobs:
               except (UnicodeDecodeError, OSError):
                   continue
               old = s
-              for a, b in replacements:
-                  s = s.replace(a, b)
+              s = url_pattern.sub("https://t.me/sr_panel_zone", s)
               s = re.sub(r"(?i)XYZ\\s*V?2\\.8", "ONLY UP 1.0", s)
+              s = s.replace("XYZ V2.8", "ONLY UP 1.0").replace("XYZ 2.8", "ONLY UP 1.0")
               if s != old:
                   p.write_text(s, encoding="utf-8")
 
@@ -80,7 +64,7 @@ jobs:
           ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
           tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
-          # Replace image-based launcher icons only. Adaptive icon XML is preserved.
+          # Replace raster launcher icons only; keep app artwork and adaptive-icon XML intact.
           candidates = []
           for p in root.rglob("*"):
               if not p.is_file() or p.suffix.lower() not in {".png", ".webp"}:
