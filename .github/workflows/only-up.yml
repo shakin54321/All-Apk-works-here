@@ -1,0 +1,88 @@
+name: Rebrand M1NX VIP to ONLY UP
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "M1NX VIP.apk"
+      - "ONLY-UP-LOGO.png"
+      - ".github/workflows/only-up.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  rebrand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check inputs
+        run: |
+          test -f "M1NX VIP.apk"
+          test -f "ONLY-UP-LOGO.png"
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre-headless apksigner zipalign imagemagick python3
+          curl -fL --retry 3 -o apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
+
+      - name: Decode APK
+        run: java -jar apktool.jar d -f "M1NX VIP.apk" -o decoded
+
+      - name: Apply visible branding and text replacements
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import xml.etree.ElementTree as ET
+
+          root = Path("decoded")
+          manifest = root / "AndroidManifest.xml"
+          tree = ET.parse(manifest)
+          app = tree.getroot().find("application")
+          if app is None:
+              raise SystemExit("No application element in manifest")
+          ns = "{http://schemas.android.com/apk/res/android}"
+          app.set(ns + "label", "ONLY UP")
+          tree.write(manifest, encoding="utf-8", xml_declaration=True)
+
+          url_pattern = re.compile(r"""https?://(?:www[.])?(?:t[.]me|telegram[.]me)/[^\s"'<>\\]+""", re.I)
+          text_exts = {".smali", ".xml", ".json", ".txt", ".html", ".js", ".properties", ".cfg", ".yml", ".yaml"}
+          for base in [p for p in root.iterdir() if p.is_dir() and (p.name.startswith("smali") or p.name in {"res", "assets"})]:
+              for p in base.rglob("*"):
+                  if p.is_file() and p.suffix.lower() in text_exts:
+                      try:
+                          original = p.read_text(encoding="utf-8")
+                      except (UnicodeDecodeError, OSError):
+                          continue
+                      updated = url_pattern.sub("https://t.me/sr_panel_zone", original)
+                      updated = re.sub(r"M1NX\\s+VIP", "ONLY UP", updated, flags=re.I)
+                      updated = re.sub(r"M1NXVIP", "ONLY UP", updated, flags=re.I)
+                      updated = re.sub(r"(?i)(?:all\\s+rights\\s+reserved|developed\\s+by|created\\s+by|powered\\s+by)[^<\\n]{0,100}", "Credits: Shakin Al Mahmud", updated)
+                      if updated != original:
+                          p.write_text(updated, encoding="utf-8")
+          PY
+
+      - name: Replace known logo image resources
+        run: |
+          mkdir -p decoded/res/sg decoded/res/gy decoded/res/wr
+          convert "ONLY-UP-LOGO.png" -resize 100x100 -gravity center -background none -extent 100x100 decoded/res/sg/eksd.png
+          cp decoded/res/sg/eksd.png decoded/res/gy/pwzj.png
+          cp decoded/res/sg/eksd.png decoded/res/wr/niwq.png
+
+      - name: Rebuild, align and sign
+        run: |
+          java -jar apktool.jar b decoded -o ONLY-UP-unsigned.apk
+          keytool -genkeypair -v -keystore only-up-release.jks -storepass onlyuppass -keypass onlyuppass -alias onlyup -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ONLY UP, OU=App, O=ONLY UP, L=Dhaka, S=Dhaka, C=BD"
+          zipalign -p -f 4 ONLY-UP-unsigned.apk ONLY-UP-aligned.apk
+          apksigner sign --ks only-up-release.jks --ks-pass pass:onlyuppass --key-pass pass:onlyuppass --out ONLY-UP.apk ONLY-UP-aligned.apk
+          apksigner verify --verbose ONLY-UP.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ONLY-UP-APK
+          path: ONLY-UP.apk
+          retention-days: 14
