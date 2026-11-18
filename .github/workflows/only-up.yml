@@ -46,6 +46,8 @@ jobs:
               raise SystemExit("No application element in manifest")
           ns = "{http://schemas.android.com/apk/res/android}"
           app.set(ns + "label", "ONLY UP")
+          app.set(ns + "icon", "@drawable/only_up_logo")
+          app.set(ns + "roundIcon", "@drawable/only_up_logo")
           tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
           url_pattern = re.compile(r"""https?://(?:www[.])?(?:t[.]me|telegram[.]me)/[^\s"'<>\\]+""", re.I)
