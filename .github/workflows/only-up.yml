@@ -72,10 +72,10 @@ jobs:
           mkdir -p decoded/res/drawable-nodpi
           # Trim the source image's empty canvas first, then CONTAIN it in the target
           # square. This avoids the old crop/oversized logo and the tiny padded logo.
-          convert "file_000000004bf882118999852833acb449.png" -alpha off -fuzz 3% -trim +repage -resize 460x460 -gravity center -background white -extent 512x512 decoded/res/drawable-nodpi/only_up_logo.png
+          convert "file_000000004bf882118999852833acb449.png" -background white -alpha remove -alpha off -fuzz 3% -trim +repage -resize 460x460 -gravity center -background white -extent 512x512 decoded/res/drawable-nodpi/only_up_logo.png
           for f in decoded/unknown/res/sg/eksd.png decoded/unknown/res/gy/pwzj.png decoded/unknown/res/wr/niwq.png; do
             test -f "$f"
-            convert "file_000000004bf882118999852833acb449.png" -alpha off -fuzz 3% -trim +repage -resize 90x90 -gravity center -background white -extent 100x100 "$f"
+            convert "file_000000004bf882118999852833acb449.png" -background white -alpha remove -alpha off -fuzz 3% -trim +repage -resize 90x90 -gravity center -background white -extent 100x100 "$f"
           done
           python3 - <<'PY'
           from pathlib import Path
