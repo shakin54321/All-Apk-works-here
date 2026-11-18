@@ -41,56 +41,71 @@ jobs:
           root = Path("work/decoded")
           logo = Path("file_000000006edc8207a50dbf996378292c.png")
           text_ext = {".xml", ".json", ".html", ".htm", ".txt", ".properties", ".smali", ".js"}
-
-          # Replace complete known social-channel URLs, not URL prefixes.
-          url_pattern = re.compile(r"https?://(?:t\.me|telegram\.me|wa\.me|www\.whatsapp\.com/channel)/[^\\s\"'<>]*", re.I)
+          translations = {
+              "Jangan tampilkan lagi": "Don't show again",
+              "SELAMAT DATANG KEMBALI": "WELCOME BACK",
+              "JOIN CHANNEL WHATSAPP.": "JOIN TELEGRAM CHANNEL.",
+              "JOIN WHATSAPP": "JOIN TELEGRAM",
+              "Tidak bisa membuka saluran. Pasang WhatsApp atau browser, lalu coba lagi.": "Unable to open the channel. Install Telegram or a browser, then try again.",
+              "Buka Debugging nirkabel > Pasangkan dengan kode. Perluas notifikasi ONLY UP 1.0 lalu ketuk MASUKKAN KODE. Kode juga dapat dimasukkan melalui aplikasi.": "Open Wireless debugging > Pair with code. Expand the ONLY UP 1.0 notification and tap ENTER CODE. You can also enter the code in the app.",
+              "Buka proxy ONLY UP 1.0; seret untuk memindahkan": "Open the ONLY UP 1.0 proxy; drag to move",
+              "Di opsi developer, buka Debugging nirkabel > Pasangkan dengan kode. Lalu ketuk MASUKKAN KODE pada notifikasi ini.": "In Developer options, open Wireless debugging > Pair with code. Then tap ENTER CODE in this notification.",
+              "Pengaturan tidak dapat dibuka. Buka opsi developer di Android.": "Unable to open Settings. Open Developer options on Android."
+          }
+          url_pattern = re.compile(r"https?://(?:t\\.me|telegram\\.me|wa\\.me|www\\.whatsapp\\.com/channel)/[^\\s\"'<>]*", re.I)
+          changed = []
           for p in root.rglob("*"):
               if not p.is_file() or p.suffix.lower() not in text_ext:
                   continue
               try:
-                  s = p.read_text(encoding="utf-8")
+                  original = p.read_text(encoding="utf-8")
               except (UnicodeDecodeError, OSError):
                   continue
-              old = s
-              s = url_pattern.sub("https://t.me/sr_panel_zone", s)
-              s = re.sub(r"(?i)XYZ\\s*V?2\\.8", "ONLY UP 1.0", s)
-              s = s.replace("XYZ V2.8", "ONLY UP 1.0").replace("XYZ 2.8", "ONLY UP 1.0")
-              if s != old:
-                  p.write_text(s, encoding="utf-8")
+              value = url_pattern.sub("https://t.me/sr_panel_zone", original)
+              value = value.replace("XYZ V2.8", "ONLY UP 1.0").replace("XYZ 2.8", "ONLY UP 1.0")
+              value = value.replace("XYZ 2.8", "ONLY UP 1.0")
+              for source, target in translations.items():
+                  value = value.replace(source, target)
+              if value != original:
+                  p.write_text(value, encoding="utf-8")
+                  changed.append(str(p.relative_to(root)))
 
           manifest = root / "AndroidManifest.xml"
           tree = ET.parse(manifest)
           mroot = tree.getroot()
           android = "{http://schemas.android.com/apk/res/android}"
           mroot.set(android + "label", "ONLY UP 1.0")
+          mroot.set(android + "icon", "@drawable/icon")
+          mroot.set(android + "roundIcon", "@drawable/icon")
           ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
           tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
-          # Replace raster launcher icons only; keep app artwork and adaptive-icon XML intact.
-          candidates = []
-          for p in root.rglob("*"):
-              if not p.is_file() or p.suffix.lower() not in {".png", ".webp"}:
+          # Replace known logo/icon assets with the uploaded white-background logo.
+          targets = []
+          for name in ["brand_logo.png", "icon.xml", "notification_icon.xml", "modjav_logo.xml"]:
+              target = root / "res" / "drawable" / name
+              if not target.exists():
                   continue
-              n, parent = p.name.lower(), str(p.parent).lower()
-              if ("ic_launcher" in n or "app_icon" in n or "launcher" in n) and ("mipmap" in parent or "drawable" in parent):
-                  candidates.append(p)
-          for target in candidates:
-              tmp = target.with_name(target.stem + ".onlyup.png")
-              subprocess.run(["convert", str(logo), "-resize", "512x512", "-gravity", "center", "-extent", "512x512", str(tmp)], check=True)
-              if target.suffix.lower() == ".webp":
-                  subprocess.run(["convert", str(tmp), str(target)], check=True)
-                  tmp.unlink(missing_ok=True)
-              else:
-                  tmp.replace(target)
+              png = target.with_suffix(".png")
+              subprocess.run(["convert", str(logo), "-background", "white", "-alpha", "remove", "-alpha", "off", "-resize", "460x460", "-gravity", "center", "-extent", "512x512", str(png)], check=True)
+              if target.suffix == ".xml":
+                  target.unlink()
+              targets.append(str(png.relative_to(root)))
 
-          values = root / "res" / "values"
-          inventory = []
-          if values.exists():
-              for p in values.glob("strings.xml"):
-                  inventory.append(p.read_text(encoding="utf-8", errors="replace"))
-          Path("output/strings-inventory.txt").write_text("\n\n".join(inventory), encoding="utf-8")
-          Path("output/icon-targets.txt").write_text("\n".join(str(p) for p in candidates), encoding="utf-8")
-          print(f"Updated launcher image assets: {len(candidates)}")
+          # Export review material so resource strings can be audited before final release.
+          output = Path("output")
+          output.mkdir(exist_ok=True)
+          review = []
+          for p in sorted(root.rglob("strings.xml")):
+              review.append(f"### {p.relative_to(root)}\\n" + p.read_text(encoding="utf-8", errors="replace"))
+          popup = root / "res" / "layout" / "modjav_popup.xml"
+          if popup.exists():
+              (output / "modjav_popup.xml").write_text(popup.read_text(encoding="utf-8", errors="replace"), encoding="utf-8")
+              review.append("### modjav_popup.xml\\n" + popup.read_text(encoding="utf-8", errors="replace"))
+          (output / "strings-inventory.txt").write_text("\\n\\n".join(review), encoding="utf-8")
+          (output / "changed-text-files.txt").write_text("\\n".join(changed), encoding="utf-8")
+          (output / "icon-targets.txt").write_text("\\n".join(targets), encoding="utf-8")
+          print(f"Updated text files: {len(changed)}; logo resources: {len(targets)}")
           PY
 
       - name: Build and sign
