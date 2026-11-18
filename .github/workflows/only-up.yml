@@ -67,12 +67,35 @@ jobs:
                           p.write_text(updated, encoding="utf-8")
           PY
 
-      - name: Replace known logo image resources
+      - name: Replace launcher and overlay logo images
         run: |
           mkdir -p decoded/res/drawable-nodpi
           convert "file_000000004bf882118999852833acb449.png" -resize 512x512^ -gravity center -background none -extent 512x512 decoded/res/drawable-nodpi/only_up_logo.png
-          # Keep the custom image in a valid Android resource directory.
-          # Existing protected overlay assets are not overwritten blindly.
+          # These three original 100x100 image resources were visually confirmed
+          # to be the repeated in-app/overlay avatar logo.
+          for f in decoded/res/sg/eksd.png decoded/res/gy/pwzj.png decoded/res/wr/niwq.png; do
+            if [ -f "$f" ]; then
+              convert "file_000000004bf882118999852833acb449.png" -resize 100x100 -background none -gravity center -extent 100x100 "$f"
+            fi
+          done
+          # The protected layout is stored as Android binary XML. Replace only
+          # equal-length string literals so its binary offsets remain unchanged.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("decoded/res/ia/jmgs.xml")
+          if p.exists():
+              data = p.read_bytes()
+              pairs = [
+                  (b"M1NX VIP LOGO", b"ONLY UP LOGO "),
+                  (b"WELCOME TO M1NX VIP", b"WELCOME TO ONLY UP "),
+                  (b"M1NX VIP", b"ONLY UP "),
+              ]
+              for old, new in pairs:
+                  if len(old) != len(new):
+                      raise SystemExit(f"Unsafe binary string replacement: {old!r}")
+                  data = data.replace(old, new)
+              p.write_bytes(data)
+          PY
 
       - name: Rebuild, align and sign
         run: |
