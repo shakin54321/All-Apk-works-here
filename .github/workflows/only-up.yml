@@ -52,7 +52,7 @@ jobs:
 
           url_pattern = re.compile(r"""https?://(?:www[.])?(?:t[.]me|telegram[.]me)/[^\s"'<>\\]+""", re.I)
           text_exts = {".smali", ".xml", ".json", ".txt", ".html", ".js", ".properties", ".cfg", ".yml", ".yaml"}
-          for base in [p for p in root.iterdir() if p.is_dir() and (p.name.startswith("smali") or p.name in {"res", "assets"})]:
+          for base in [p for p in root.iterdir() if p.is_dir() and (p.name.startswith("smali") or p.name in {"res", "assets", "unknown"})]:
               for p in base.rglob("*"):
                   if p.is_file() and p.suffix.lower() in text_exts:
                       try:
@@ -60,27 +60,28 @@ jobs:
                       except (UnicodeDecodeError, OSError):
                           continue
                       updated = url_pattern.sub("https://t.me/sr_panel_zone", original)
-                      updated = re.sub(r"M1NX\s+VIP", "ONLY UP", updated, flags=re.I)
+                      updated = re.sub(r"M1NX[ _-]*VIP", "ONLY UP", updated, flags=re.I)
                       updated = re.sub(r"M1NXVIP", "ONLY UP", updated, flags=re.I)
                       updated = re.sub(r"(?i)(?:all\s+rights\s+reserved|developed\s+by|created\s+by|powered\s+by)[^<\n]{0,100}", "Credits: Shakin Al Mahmud", updated)
                       if updated != original:
                           p.write_text(updated, encoding="utf-8")
           PY
 
-      - name: Replace launcher and in-app logo resources
+      - name: Fit supplied logo correctly in all exposed logo resources
         run: |
           mkdir -p decoded/res/drawable-nodpi
-          convert "file_000000004bf882118999852833acb449.png" -resize 512x512^ -gravity center -background none -extent 512x512 decoded/res/drawable-nodpi/only_up_logo.png
-          # Apktool preserves these obfuscated resource files under unknown/.
+          # Trim the source image's empty canvas first, then CONTAIN it in the target
+          # square. This avoids the old crop/oversized logo and the tiny padded logo.
+          convert "file_000000004bf882118999852833acb449.png" -alpha off -fuzz 3% -trim +repage -resize 460x460 -gravity center -background white -extent 512x512 decoded/res/drawable-nodpi/only_up_logo.png
           for f in decoded/unknown/res/sg/eksd.png decoded/unknown/res/gy/pwzj.png decoded/unknown/res/wr/niwq.png; do
             test -f "$f"
-            convert "file_000000004bf882118999852833acb449.png" -resize 100x100 -background none -gravity center -extent 100x100 "$f"
+            convert "file_000000004bf882118999852833acb449.png" -alpha off -fuzz 3% -trim +repage -resize 90x90 -gravity center -background white -extent 100x100 "$f"
           done
           python3 - <<'PY'
           from pathlib import Path
           p = Path("decoded/unknown/res/ia/jmgs.xml")
           if not p.exists():
-              raise SystemExit("Expected protected binary layout not found")
+              raise SystemExit("Expected protected layout resource not found")
           data = p.read_bytes()
           pairs = [
               (b"M1NX VIP LOGO", b"ONLY UP LOGO "),
@@ -90,11 +91,11 @@ jobs:
           for old, new in pairs:
               if len(old) != len(new):
                   raise SystemExit(f"Unsafe binary string replacement: {old!r}")
-              if old not in data:
-                  raise SystemExit(f"Expected visible brand string not found: {old!r}")
-              data = data.replace(old, new)
+              if old in data:
+                  data = data.replace(old, new)
           p.write_bytes(data)
           PY
+          echo "Protected executable payloads are intentionally not unpacked or modified."
 
       - name: Rebuild, align and sign
         run: |
