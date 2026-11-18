@@ -50,8 +50,94 @@ jobs:
               "Buka Debugging nirkabel > Pasangkan dengan kode. Perluas notifikasi ONLY UP 1.0 lalu ketuk MASUKKAN KODE. Kode juga dapat dimasukkan melalui aplikasi.": "Open Wireless debugging > Pair with code. Expand the ONLY UP 1.0 notification and tap ENTER CODE. You can also enter the code in the app.",
               "Buka proxy ONLY UP 1.0; seret untuk memindahkan": "Open the ONLY UP 1.0 proxy; drag to move",
               "Di opsi developer, buka Debugging nirkabel > Pasangkan dengan kode. Lalu ketuk MASUKKAN KODE pada notifikasi ini.": "In Developer options, open Wireless debugging > Pair with code. Then tap ENTER CODE in this notification.",
-              "Pengaturan tidak dapat dibuka. Buka opsi developer di Android.": "Unable to open Settings. Open Developer options on Android."
+              "Pengaturan tidak dapat dibuka. Buka opsi developer di Android.": "Unable to open Settings. Open Developer options on Android.",
+              "7 tidak valid. Injeksi ulang file lalu mulai ulang game.": "Invalid. Re-inject the file and restart the game.",
+              "). Periksa izin modul.": "Check module permissions.",
+              ". Pemuat dan izin modul harus tersedia.": "A compatible loader and module permissions are required.",
+              "ACTIVE PROXY tidak dapat dibuka. Periksa izin tampil di atas aplikasi lain, lalu coba lagi.": "Unable to open ACTIVE PROXY. Check the display-over-other-apps permission, then try again.",
+              "ACTIVE PROXY tidak dapat ditampilkan.": "ACTIVE PROXY cannot be displayed.",
+              "ACTIVE PROXY tidak dapat ditampilkan. Periksa izin tampil di atas aplikasi lain.": "ACTIVE PROXY cannot be displayed. Check the display-over-other-apps permission.",
+              "ADB TERHUBUNG. ACTIVE PROXY siap dibuka.": "ADB CONNECTED. ACTIVE PROXY is ready to open.",
+              "ADB TERHUBUNG. Kembali ke ": "ADB CONNECTED. Return to ",
+              "ADB terputus. Aktifkan debugging nirkabel lalu sambungkan ulang ADB.": "ADB disconnected. Enable Wireless debugging, then reconnect ADB.",
+              "ADB tidak merespons tepat waktu. Pastikan debugging nirkabel aktif lalu sambungkan ulang ADB.": "ADB did not respond in time. Make sure Wireless debugging is enabled, then reconnect ADB.",
+              "ADB tidak merespons. Aktifkan debugging nirkabel lalu sambungkan ulang ADB.": "ADB is not responding. Enable Wireless debugging, then reconnect ADB.",
+              "AIM FOV SIZE belum diterima. Periksa modul dan sambungkan ulang.": "AIM FOV SIZE has not been received. Check the module and reconnect.",
+              "Aktifkan lewat notifikasi": "Enable from the notification",
+              "Android belum mengizinkan ADB. Buat kode baru dan lakukan penyandingan melalui AKTIFKAN.": "Android has not authorized ADB. Create a new code and pair using ENABLE.",
+              "Android memblokir Android/data di pemilih ini. Gunakan TANPA ADB hanya jika folder sudah diizinkan untuk aplikasi ini; jika tidak, gunakan ADB.": "Android blocks Android/data in this picker. Use WITHOUT ADB only if this app already has folder access; otherwise, use ADB.",
+              "Android memblokir folder game. Periksa izin lalu sambungkan ulang ADB.": "Android is blocking the game folder. Check permissions, then reconnect ADB.",
+              "Android tidak mengizinkan akses tetap ke folder.": "Android does not allow persistent folder access.",
+              "Android tidak mengizinkan pemasangan file. Periksa izinnya.": "Android does not allow file installation. Check the permission.",
+              "Aplikasi tidak dapat diverifikasi. Instal ulang APK ": "The app could not be verified. Reinstall the APK ",
+              "Buka Pasangkan dengan kode di Android dalam layar terbagi, lalu masukkan enam digit:": "Open Pair with code on Android in split-screen, then enter the six digits:",
+              "Buka izin tampil di atas aplikasi lain di pengaturan Android.": "Open the display-over-other-apps permission in Android Settings.",
+              "Buka pengaturan": "Open settings",
+              "File berhasil diinjeksi dan diperiksa.": "File injected and verified successfully.",
+              "File gagal diverifikasi. Ketuk INJECT PROXY lagi.": "File verification failed. Tap INJECT PROXY again.",
+              "File terlindungi tidak valid.": "The protected file is invalid.",
+              "File yang ditulis tidak sesuai dengan aslinya": "The written file does not match the original",
+              "disalin dan diperiksa. Game masih memerlukan pemuat dan izin modul.": "copied and verified. The game still requires a compatible loader and module permissions.",
+              "Folder game belum dapat diakses. Mode TANPA ADB memerlukan izin folder untuk aplikasi ini. Periksa izin di Pengaturan; gunakan ADB jika Android memblokir folder.": "The game folder is not accessible yet. WITHOUT ADB mode requires folder permission for this app. Check permissions in Settings; use ADB if Android blocks the folder.",
+              "Folder game tidak ditemukan. Buka game terlebih dahulu.": "Game folder not found. Open the game first.",
+              "Izin ACTIVE PROXY": "ACTIVE PROXY permission",
+              "Izin penyimpanan ditolak. Berikan akses di pengaturan aplikasi.": "Storage permission denied. Grant access in app settings.",
+              "Izinkan notifikasi atau masukkan kode di aplikasi.": "Allow notifications or enter the code in the app.",
+              "Key diterima, tetapi tidak dapat disimpan di perangkat ini. Masukkan lagi saat membuka aplikasi.": "The key was accepted but cannot be saved on this device. Enter it again when opening the app.",
+              "Key tidak valid atau sudah dinonaktifkan. Periksa lalu coba lagi.": "The key is invalid or has been disabled. Check it and try again.",
+              "Kode tidak valid. Masukkan enam digit yang ditampilkan Android.": "Invalid code. Enter the six digits shown by Android.",
+              "Koneksi ADB terputus. Aktifkan debugging nirkabel lalu sambungkan ulang ADB.": "ADB connection lost. Enable Wireless debugging, then reconnect ADB.",
+              "Koneksi terlalu lama. Aktifkan debugging nirkabel lalu coba sambungkan ulang ADB.": "Connection timed out. Enable Wireless debugging, then try reconnecting ADB.",
+              "MENU PROXY TERBUKA. Free Fire tidak dapat dibuka otomatis.": "PROXY MENU OPEN. Free Fire cannot be opened automatically.",
+              "MENU PROXY TERBUKA. Free Fire tidak ditemukan di profil Android ini.": "PROXY MENU OPEN. Free Fire was not found in this Android profile.",
+              "MODE TANPA ADB. Aplikasi memerlukan akses ke folder game.": "WITHOUT ADB MODE. The app needs access to the game folder.",
+              "MODE TANPA ADB. Injeksi file setelah mengizinkan akses folder.": "WITHOUT ADB MODE. Inject the file after granting folder access.",
+              "Masukkan enam digit kode dari Android.": "Enter the six-digit code from Android.",
+              "Masukkan key yang valid terlebih dahulu.": "Enter a valid key first.",
+              "Memeriksa akses yang dipilih": "Checking selected access",
+              "Memeriksa key dan versi secara online": "Checking key and version online",
+              "Modul belum mendukung ": "The module does not support ",
+              "Modul menolak perintah (HTTP ": "The module rejected the request (HTTP ",
+              "Modul tidak tersedia. Buka game dengan pemuat yang kompatibel dan diizinkan.": "The module is unavailable. Open the game with a compatible, authorized loader.",
+              "Nilai status FOV tidak valid": "Invalid FOV status value",
+              "Notifikasi diblokir. Masukkan kode di aplikasi.": "Notifications are blocked. Enter the code in the app.",
+              "ACTIVE PROXY aktif": "ACTIVE PROXY is active",
+              "Operasi gagal.": "Operation failed.",
+              "Penyandingan dengan kode memerlukan Android 11 atau lebih baru.": "Pairing with a code requires Android 11 or later.",
+              "Penyandingan melalui notifikasi sedang berlangsung. Tunggu hasilnya.": "Notification-based pairing is in progress. Wait for the result.",
+              "Penyandingan menunggu kode baru. Ketuk AKTIFKAN lagi.": "Pairing is waiting for a new code. Tap ENABLE again.",
+              "Penyandingan sedang berlangsung. Tunggu hasilnya di notifikasi.": "Pairing is in progress. Wait for the result in the notification.",
+              "Penyandingan tidak ditemukan. Buka Pasangkan dengan kode di Android, lalu coba lagi.": "Pairing was not found. Open Pair with code on Android, then try again.",
+              "Penyandingan, koneksi, dan izin proxy.": "Pairing, connection, and proxy permissions.",
+              "Pilih folder game Android/data/com.dts.freefireth/files.": "Select the game folder Android/data/com.dts.freefireth/files.",
+              "Pilih tepat Android/data/com.dts.freefireth/files. Jika Android memblokir folder ini, perangkat memerlukan ADB; 32 bit tidak menghapus pembatasan.": "Select exactly Android/data/com.dts.freefireth/files. If Android blocks this folder, the device requires ADB; 32-bit mode does not remove this restriction.",
+              "Respons ADB tidak valid. Sambungkan ulang ADB.": "Invalid ADB response. Reconnect ADB.",
+              "STATUS BELUM PASTI. Menyambungkan ulang dan menonaktifkan fitur": "STATUS UNCERTAIN. Reconnecting and disabling the feature",
+              "Sambungkan ulang ADB melalui AKTIFKAN untuk membuka ACTIVE PROXY.": "Reconnect ADB using ENABLE to open ACTIVE PROXY.",
+              "Sambungkan, injeksi file, lalu buka proxy.": "Connect, inject the file, then open the proxy.",
+              "Seret, minimalkan, atau ketuk Tutup.": "Drag, minimize, or tap Close.",
+              "Server belum siap atau tidak dapat dihubungi. Periksa internet, lalu coba lagi.": "The server is not ready or cannot be reached. Check your internet connection and try again.",
+              "Status FOV tidak valid": "Invalid FOV status",
+              "Tidak ada aplikasi yang dapat membuka tautan.": "No app is available to open this link.",
+              "Tidak dapat menyelesaikan operasi. Periksa debugging nirkabel, sambungkan ulang ADB, lalu coba lagi.": "Unable to complete the operation. Check Wireless debugging, reconnect ADB, then try again.",
+              "Transfer gagal. Sambungkan ulang ADB lalu coba lagi.": "Transfer failed. Reconnect ADB and try again.",
+              "Tunggu pemeriksaan ADB selesai. Proses ini memerlukan waktu hingga 10 detik.": "Wait for the ADB check to finish. This may take up to 10 seconds.",
+              "Tunggu proses penyambungan selesai, lalu coba lagi.": "Wait for the connection process to finish, then try again.",
+              "Tunggu proses selesai sebelum mengganti mode.": "Wait for the process to finish before changing modes.",
+              "Tutup game sebelum menginjeksi file.": "Close the game before injecting the file.",
+              "Versi ini sudah tidak berlaku. Buka saluran untuk mendapatkan APK terbaru.": "This version is no longer supported. Open the channel to get the latest APK.",
+              "Wi-Fi mati. Aktifkan Wi-Fi dan debugging nirkabel untuk menyambungkan ulang.": "Wi-Fi is off. Enable Wi-Fi and Wireless debugging to reconnect.",
+              "Pengaturan": "Settings",
+              "Batal": "Cancel",
+              "Pasangkan": "Pair",
+              "Penyandingan ADB": "ADB Pairing",
+              "Penyandingan": "Pairing",
+              "Pilih": "Select",
+              "Tutup": "Close",
+              "Gagal": "Failed",
+              "Masukkan ": "Enter "
           }
+
           url_pattern = re.compile(r"https?://(?:t\\.me|telegram\\.me|wa\\.me|www\\.whatsapp\\.com/channel)/[^\\s\"'<>]*", re.I)
           changed = []
           for p in root.rglob("*"):
@@ -63,7 +149,6 @@ jobs:
                   continue
               value = url_pattern.sub("https://t.me/sr_panel_zone", original)
               value = value.replace("XYZ V2.8", "ONLY UP 1.0").replace("XYZ 2.8", "ONLY UP 1.0")
-              value = value.replace("XYZ 2.8", "ONLY UP 1.0")
               for source, target in translations.items():
                   value = value.replace(source, target)
               if value != original:
@@ -80,7 +165,7 @@ jobs:
           ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
           tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
-          # Replace known logo/icon assets with the uploaded white-background logo.
+          # Replace known app, popup, and notification logo resources.
           targets = []
           for name in ["brand_logo.png", "icon.xml", "notification_icon.xml", "modjav_logo.xml"]:
               target = root / "res" / "drawable" / name
@@ -92,16 +177,36 @@ jobs:
                   target.unlink()
               targets.append(str(png.relative_to(root)))
 
-          # Export review material so resource strings can be audited before final release.
+          # Add the requested author credit to the existing popup card.
+          popup = root / "res" / "layout" / "modjav_popup.xml"
+          if popup.exists():
+              ptree = ET.parse(popup)
+              proot = ptree.getroot()
+              vertical = next((e for e in proot.iter() if e.tag.split("}")[-1] == "LinearLayout" and e.get(android + "orientation") == "vertical"), None)
+              if vertical is not None and not any("Credits: Shakin Al Mahmud" in (e.get(android + "text") or "") for e in vertical):
+                  credit = ET.Element("TextView", {
+                      android + "text": "Credits: Shakin Al Mahmud",
+                      android + "textSize": "10.0sp",
+                      android + "textColor": "#71829a",
+                      android + "gravity": "center",
+                      android + "layout_width": "match_parent",
+                      android + "layout_height": "wrap_content",
+                      android + "layout_marginTop": "8.0dp",
+                      android + "fontFamily": "sans-serif"
+                  })
+                  vertical.append(credit)
+                  ptree.write(popup, encoding="utf-8", xml_declaration=True)
+                  ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+
           output = Path("output")
           output.mkdir(exist_ok=True)
           review = []
           for p in sorted(root.rglob("strings.xml")):
               review.append(f"### {p.relative_to(root)}\\n" + p.read_text(encoding="utf-8", errors="replace"))
-          popup = root / "res" / "layout" / "modjav_popup.xml"
           if popup.exists():
-              (output / "modjav_popup.xml").write_text(popup.read_text(encoding="utf-8", errors="replace"), encoding="utf-8")
-              review.append("### modjav_popup.xml\\n" + popup.read_text(encoding="utf-8", errors="replace"))
+              popup_text = popup.read_text(encoding="utf-8", errors="replace")
+              (output / "modjav_popup.xml").write_text(popup_text, encoding="utf-8")
+              review.append("### modjav_popup.xml\\n" + popup_text)
           (output / "strings-inventory.txt").write_text("\\n\\n".join(review), encoding="utf-8")
           (output / "changed-text-files.txt").write_text("\\n".join(changed), encoding="utf-8")
           (output / "icon-targets.txt").write_text("\\n".join(targets), encoding="utf-8")
