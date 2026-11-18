@@ -231,3 +231,5 @@ jobs:
             output/strings-inventory.txt
             output/icon-targets.txt
           if-no-files-found: error
+
+# Rebuild requested after resource translation and branding updates.
