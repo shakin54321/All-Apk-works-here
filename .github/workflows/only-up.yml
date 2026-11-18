@@ -67,10 +67,10 @@ jobs:
 
       - name: Replace known logo image resources
         run: |
-          mkdir -p decoded/res/sg decoded/res/gy decoded/res/wr
-          convert "file_000000004bf882118999852833acb449.png" -resize 100x100 -gravity center -background none -extent 100x100 decoded/res/sg/eksd.png
-          cp decoded/res/sg/eksd.png decoded/res/gy/pwzj.png
-          cp decoded/res/sg/eksd.png decoded/res/wr/niwq.png
+          mkdir -p decoded/res/drawable-nodpi
+          convert "file_000000004bf882118999852833acb449.png" -resize 512x512^ -gravity center -background none -extent 512x512 decoded/res/drawable-nodpi/only_up_logo.png
+          # Keep the custom image in a valid Android resource directory.
+          # Existing protected overlay assets are not overwritten blindly.
 
       - name: Rebuild, align and sign
         run: |
