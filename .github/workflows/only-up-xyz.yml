@@ -1,0 +1,128 @@
+name: ONLY UP 1.0 - XYZ V2.8
+on:
+  push:
+    paths:
+      - ".github/workflows/only-up-xyz.yml"
+      - "XYZ V2.8.apk"
+      - "file_000000006edc8207a50dbf996378292c.png"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rebrand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Android tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apktool imagemagick zipalign apksigner
+          mkdir -p work output
+
+      - name: Decode XYZ APK
+        run: |
+          test -s "XYZ V2.8.apk"
+          test -s "file_000000006edc8207a50dbf996378292c.png"
+          apktool d -f "XYZ V2.8.apk" -o work/decoded
+
+      - name: Rebrand accessible resources
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, shutil, subprocess, xml.etree.ElementTree as ET
+
+          root = Path("work/decoded")
+          logo = Path("file_000000006edc8207a50dbf996378292c.png")
+
+          # Replace only known brand/link strings in decoded text resources.
+          replacements = [
+              ("https://t.me/", "https://t.me/sr_panel_zone"),
+              ("http://t.me/", "https://t.me/sr_panel_zone"),
+              ("https://telegram.me/", "https://t.me/sr_panel_zone"),
+              ("http://telegram.me/", "https://t.me/sr_panel_zone"),
+              ("https://wa.me/", "https://t.me/sr_panel_zone"),
+              ("https://whatsapp.com/channel/", "https://t.me/sr_panel_zone"),
+              ("XYZ V2.8", "ONLY UP 1.0"),
+              ("XYZ 2.8", "ONLY UP 1.0"),
+              ("XYZ", "ONLY UP"),
+          ]
+          text_ext = {".xml", ".json", ".html", ".htm", ".txt", ".properties", ".smali", ".js", ".xml"}
+          for p in root.rglob("*"):
+              if not p.is_file() or p.suffix.lower() not in text_ext:
+                  continue
+              try:
+                  s = p.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              old = s
+              for a, b in replacements:
+                  s = s.replace(a, b)
+              # Replace common app title resource values and explicit old version labels.
+              s = re.sub(r'(?i)(XYZ\\s*V?2\\.8)', 'ONLY UP 1.0', s)
+              if s != old:
+                  p.write_text(s, encoding="utf-8")
+
+          # Update manifest label and preserve existing app components/permissions.
+          manifest = root / "AndroidManifest.xml"
+          tree = ET.parse(manifest)
+          mroot = tree.getroot()
+          android = "{http://schemas.android.com/apk/res/android}"
+          mroot.set(android + "label", "ONLY UP 1.0")
+          ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+          tree.write(manifest, encoding="utf-8", xml_declaration=True)
+
+          # Replace launcher icon assets only; do not overwrite arbitrary in-app artwork.
+          candidates = []
+          for p in root.rglob("*"):
+              if not p.is_file() or p.suffix.lower() not in {".png", ".webp"}:
+                  continue
+              n = p.name.lower()
+              parent = str(p.parent).lower()
+              if ("ic_launcher" in n or "app_icon" in n or "launcher" in n) and ("mipmap" in parent or "drawable" in parent):
+                  candidates.append(p)
+          for target in candidates:
+              tmp = target.with_suffix(".png")
+              subprocess.run(["convert", str(logo), "-resize", "512x512", "-gravity", "center", "-extent", "512x512", str(tmp)], check=True)
+              if target.suffix.lower() == ".webp":
+                  webp = target.with_suffix(".webp")
+                  subprocess.run(["convert", str(tmp), str(webp)], check=True)
+                  tmp.unlink(missing_ok=True)
+              else:
+                  if tmp != target:
+                      tmp.replace(target)
+
+          # Add a machine-readable inventory for untranslated strings/assets review.
+          values = root / "res" / "values"
+          inventory = []
+          if values.exists():
+              for p in values.glob("strings.xml"):
+                  inventory.append(p.read_text(encoding="utf-8", errors="replace"))
+          Path("output").mkdir(exist_ok=True)
+          Path("output/strings-inventory.txt").write_text("\\n\\n".join(inventory), encoding="utf-8")
+          Path("output/icon-targets.txt").write_text("\\n".join(str(p) for p in candidates), encoding="utf-8")
+          print(f"Updated launcher asset candidates: {len(candidates)}")
+          PY
+
+      - name: Build and sign
+        run: |
+          apktool b work/decoded -o output/ONLY-UP-unsigned.apk
+          zipalign -f 4 output/ONLY-UP-unsigned.apk output/ONLY-UP-aligned.apk
+          keytool -genkeypair -v -keystore output/only-up-debug.keystore -storepass android -keypass android -alias onlyup -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ONLY UP 1.0,O=Shakin Al Mahmud"
+          apksigner sign --ks output/only-up-debug.keystore --ks-pass pass:android --key-pass pass:android --out output/ONLY-UP-1.0.apk output/ONLY-UP-aligned.apk
+          apksigner verify --verbose output/ONLY-UP-1.0.apk
+          aapt dump badging output/ONLY-UP-1.0.apk | head -n 8 || true
+
+      - name: Upload build and review files
+        uses: actions/upload-artifact@v4
+        with:
+          name: ONLY-UP-1.0-XYZ
+          path: |
+            output/ONLY-UP-1.0.apk
+            output/strings-inventory.txt
+            output/icon-targets.txt
+          if-no-files-found: error
