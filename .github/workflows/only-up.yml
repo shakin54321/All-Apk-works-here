@@ -67,34 +67,33 @@ jobs:
                           p.write_text(updated, encoding="utf-8")
           PY
 
-      - name: Replace launcher and overlay logo images
+      - name: Replace launcher and in-app logo resources
         run: |
           mkdir -p decoded/res/drawable-nodpi
           convert "file_000000004bf882118999852833acb449.png" -resize 512x512^ -gravity center -background none -extent 512x512 decoded/res/drawable-nodpi/only_up_logo.png
-          # These three original 100x100 image resources were visually confirmed
-          # to be the repeated in-app/overlay avatar logo.
-          for f in decoded/res/sg/eksd.png decoded/res/gy/pwzj.png decoded/res/wr/niwq.png; do
-            if [ -f "$f" ]; then
-              convert "file_000000004bf882118999852833acb449.png" -resize 100x100 -background none -gravity center -extent 100x100 "$f"
-            fi
+          # Apktool preserves these obfuscated resource files under unknown/.
+          for f in decoded/unknown/res/sg/eksd.png decoded/unknown/res/gy/pwzj.png decoded/unknown/res/wr/niwq.png; do
+            test -f "$f"
+            convert "file_000000004bf882118999852833acb449.png" -resize 100x100 -background none -gravity center -extent 100x100 "$f"
           done
-          # The protected layout is stored as Android binary XML. Replace only
-          # equal-length string literals so its binary offsets remain unchanged.
           python3 - <<'PY'
           from pathlib import Path
-          p = Path("decoded/res/ia/jmgs.xml")
-          if p.exists():
-              data = p.read_bytes()
-              pairs = [
-                  (b"M1NX VIP LOGO", b"ONLY UP LOGO "),
-                  (b"WELCOME TO M1NX VIP", b"WELCOME TO ONLY UP "),
-                  (b"M1NX VIP", b"ONLY UP "),
-              ]
-              for old, new in pairs:
-                  if len(old) != len(new):
-                      raise SystemExit(f"Unsafe binary string replacement: {old!r}")
-                  data = data.replace(old, new)
-              p.write_bytes(data)
+          p = Path("decoded/unknown/res/ia/jmgs.xml")
+          if not p.exists():
+              raise SystemExit("Expected protected binary layout not found")
+          data = p.read_bytes()
+          pairs = [
+              (b"M1NX VIP LOGO", b"ONLY UP LOGO "),
+              (b"WELCOME TO M1NX VIP", b"WELCOME TO ONLY UP "),
+              (b"M1NX VIP", b"ONLY UP "),
+          ]
+          for old, new in pairs:
+              if len(old) != len(new):
+                  raise SystemExit(f"Unsafe binary string replacement: {old!r}")
+              if old not in data:
+                  raise SystemExit(f"Expected visible brand string not found: {old!r}")
+              data = data.replace(old, new)
+          p.write_bytes(data)
           PY
 
       - name: Rebuild, align and sign
