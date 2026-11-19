@@ -180,6 +180,9 @@ jobs:
               "Perintah ": "Command ",
               "Periksa izin modul.": "Check module permissions.",
               "Koneksi ADB disconnected. Enable Wireless debugging, then reconnect ADB.": "ADB connection disconnected. Enable Wireless debugging, then reconnect ADB.",
+              "Instal ulang APK ": "Reinstall APK ",
+              "Instal ulang": "Reinstall",
+              "tidak ditemukan": "not found",
               "Masukkan ": "Enter "
           }
 
