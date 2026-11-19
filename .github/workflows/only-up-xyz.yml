@@ -153,6 +153,23 @@ jobs:
               "PILIH SALAH SATU AIM.": "SELECT AN AIM OPTION.",
               "periksa akses folder": "check folder access",
               "lalu ketuk INJECT PROXY.": "then tap INJECT PROXY.",
+              "AKSES FOLDER": "FOLDER ACCESS",
+              "FITUR NONAKTIF": "FEATURE DISABLED",
+              "SIAP DIAKTIFKAN": "READY TO ENABLE",
+              "MEMERIKSA KONEKSI ADB": "CHECKING ADB CONNECTION",
+              "MENGIRIM FILE": "SENDING FILE",
+              "MENUNGGU GAME": "WAITING FOR GAME",
+              "MENYIAPKAN FOLDER GAME": "PREPARING GAME FOLDER",
+              "MODE AKSES": "ACCESS MODE",
+              "NONAKTIFKAN": "DISABLE",
+              "pilih mode aim": "choose aim mode",
+              "tidak merespons": "not responding",
+              "Injeksi ulang file lalu mulai ulang game.": "Re-inject the file, then restart the game.",
+              "Android menolak pembuatan file": "Android denied file creation.",
+              "Ketuk AKTIFKAN": "Tap ENABLE",
+              "Pilih salah satu": "Choose one",
+              "Koneksi": "Connection",
+              "Injeksi": "Injection",
               "Masukkan ": "Enter "
           }
 
