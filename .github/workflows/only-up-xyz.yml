@@ -135,10 +135,28 @@ jobs:
               "Pilih": "Select",
               "Tutup": "Close",
               "Gagal": "Failed",
+              "ACTIVE PROXY sekarang tersedia.": "ACTIVE PROXY is now available.",
+              "ADB TERHUBUNG. Ketuk INJECT PROXY.": "ADB CONNECTED. Tap INJECT PROXY.",
+              "ADB terputus. Sambungkan ulang ADB.": "ADB disconnected. Reconnect ADB.",
+              "ADB terputus. Periksa debugging nirkabel lalu sambungkan ulang ADB.": "ADB disconnected. Check Wireless debugging, then reconnect ADB.",
+              "AKSES FOLDER TERSEDIA. Injeksi file tanpa ADB.": "FOLDER ACCESS AVAILABLE. Inject the file without ADB.",
+              "Android menolak pembuatan file": "Android denied file creation.",
+              "Fitur tidak dikenal: ": "Unknown feature: ",
+              "Injeksi terlalu lama dan dihentikan. Periksa debugging nirkabel lalu sambungkan ulang ADB.": "Injection timed out and was stopped. Check Wireless debugging, then reconnect ADB.",
+              "Injeksi terlalu lama. Periksa koneksi lalu sambungkan ulang ADB.": "Injection timed out. Check the connection, then reconnect ADB.",
+              "Ketuk AKTIFKAN untuk menyandingkan. Jika sudah, aplikasi akan mencoba menyambungkan ulang otomatis.": "Tap ENABLE to pair. If already paired, the app will try to reconnect automatically.",
+              "Ketuk INJECT PROXY terlebih dahulu.": "Tap INJECT PROXY first.",
+              "Koneksi ADB": "ADB connection",
+              "Menyandingkan dan memeriksa koneksi": "Pairing and checking the connection",
+              "Pemilih folder tidak tersedia di Android ini.": "The folder picker is unavailable on this Android version.",
+              "Penulisan terlalu lama. Periksa akses folder game lalu coba lagi.": "Writing timed out. Check game-folder access and try again.",
+              "PILIH SALAH SATU AIM.": "SELECT AN AIM OPTION.",
+              "periksa akses folder": "check folder access",
+              "lalu ketuk INJECT PROXY.": "then tap INJECT PROXY.",
               "Masukkan ": "Enter "
           }
 
-          url_pattern = re.compile(r"https?://(?:t\\.me|telegram\\.me|wa\\.me|www\\.whatsapp\\.com/channel)/[^\\s\"'<>]*", re.I)
+          url_pattern = re.compile(r"""(?i)(?:https?://)?(?:www\.)?(?:t\.me|telegram\.me|telegram\.org|wa\.me|whatsapp\.com|api\.whatsapp\.com|chat\.whatsapp\.com)/[^\s"'<>]*""")
           changed = []
           for p in root.rglob("*"):
               if not p.is_file() or p.suffix.lower() not in text_ext:
