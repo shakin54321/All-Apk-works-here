@@ -170,6 +170,16 @@ jobs:
               "Pilih salah satu": "Choose one",
               "Koneksi": "Connection",
               "Injeksi": "Injection",
+              "FILE BERHASIL DIINJEKSI DAN DIPERIKSA.": "FILE INJECTED AND VERIFIED SUCCESSFULLY.",
+              "Aplikasi tidak dapat diverifikasi. Instal ulang": "The app could not be verified. Reinstall",
+              "Periksa izin tampil di atas aplikasi lain.": "Check the display-over-other-apps permission.",
+              "Penulisan ditolak": "File write was denied",
+              "Perintah ADB gagal (": "ADB command failed (",
+              "Respons ADB terlalu panjang.": "ADB response is too long.",
+              "Aktifkan ": "Enable ",
+              "Perintah ": "Command ",
+              "Periksa izin modul.": "Check module permissions.",
+              "Koneksi ADB disconnected. Enable Wireless debugging, then reconnect ADB.": "ADB connection disconnected. Enable Wireless debugging, then reconnect ADB.",
               "Masukkan ": "Enter "
           }
 
