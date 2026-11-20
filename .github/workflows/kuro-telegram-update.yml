@@ -1,0 +1,79 @@
+name: Build Kuro - Telegram Link Update
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Kuro.apk"
+      - ".github/workflows/kuro-telegram-update.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify input
+        run: test -s "Kuro.apk"
+
+      - name: Install Android build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre-headless apksigner zipalign
+          curl -fL --retry 3 -o apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
+          java -jar apktool.jar --version
+
+      - name: Decode APK
+        run: java -jar apktool.jar d -f "Kuro.apk" -o decoded
+
+      - name: Replace Telegram channel links only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path("decoded")
+          pattern = re.compile(r"""https?://(?:www\\.)?(?:t\\.me|telegram\\.me)/[^\\s"'<>\\\\]+""", re.I)
+          replacement = "https://t.me/sr_panel_zone"
+          changed = []
+          for p in root.rglob("*"):
+              if not p.is_file() or p.suffix.lower() not in {
+                  ".smali", ".xml", ".json", ".txt", ".html", ".js", ".properties", ".cfg"
+              }:
+                  continue
+              try:
+                  old = p.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              new, count = pattern.subn(replacement, old)
+              if count:
+                  p.write_text(new, encoding="utf-8")
+                  changed.append(f"{p.relative_to(root)}: {count} replacement(s)")
+          Path("telegram-link-report.txt").write_text(
+              "Telegram URL replacement report\\n" +
+              ("\\n".join(changed) if changed else "No matching Telegram URLs found in decoded text resources."),
+              encoding="utf-8"
+          )
+          print(Path("telegram-link-report.txt").read_text())
+          PY
+
+      - name: Rebuild APK
+        run: java -jar apktool.jar b decoded -o Kuro-updated-unsigned.apk
+
+      - name: Align and sign rebuilt APK
+        run: |
+          keytool -genkeypair -noprompt -keystore build-key.jks -storepass "${{ github.run_id }}-temporary" -keypass "${{ github.run_id }}-temporary" -alias kurobuild -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Kuro Rebuild, OU=Build, O=User Requested, L=Dhaka, S=Dhaka, C=BD"
+          zipalign -p -f 4 Kuro-updated-unsigned.apk Kuro-updated-aligned.apk
+          apksigner sign --ks build-key.jks --ks-pass pass:"${{ github.run_id }}-temporary" --key-pass pass:"${{ github.run_id }}-temporary" --out Kuro-updated.apk Kuro-updated-aligned.apk
+          apksigner verify --verbose Kuro-updated.apk
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kuro-updated
+          path: |
+            Kuro-updated.apk
+            telegram-link-report.txt
+          retention-days: 14
