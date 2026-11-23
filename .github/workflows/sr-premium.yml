@@ -41,9 +41,9 @@ jobs:
           from PIL import Image, ImageOps
 
           root = Path("decoded")
-          old_name = re.compile(r"M1NX\\s+VIP", re.I)
-          url_pattern = re.compile(r"https?://(?:www\\.)?(?:t\\.me|telegram\\.me)/[^\\s\"'<>\\\\]+", re.I)
-          tg_pattern = re.compile(r"tg://resolve\\?domain=[A-Za-z0-9_]+(?:&[^\\s\"'<>]*)?", re.I)
+          old_name = re.compile(r"M1NX\s+VIP", re.I)
+          url_pattern = re.compile(r"https?://(?:www\.)?(?:t\.me|telegram\.me)/[^\s\"'<>\\]+", re.I)
+          tg_pattern = re.compile(r"tg://resolve\?domain=[A-Za-z0-9_]+(?:&[^\s\"'<>]*)?", re.I)
           new_url = "https://t.me/SRPANELZONE"
           text_ext = {".smali", ".xml", ".json", ".txt", ".html", ".js", ".properties", ".cfg", ".yml", ".yaml", ".java", ".kt"}
           changed_files = []
