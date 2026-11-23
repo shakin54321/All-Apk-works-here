@@ -1,0 +1,129 @@
+name: Build SR Premium 2.0 APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "M1NX VIP V18.apk"
+      - "IMG_20261122_191337.webp"
+      - ".github/workflows/sr-premium.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  rebrand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check uploaded files
+        run: |
+          test -s "M1NX VIP V18.apk"
+          test -s "IMG_20261122_191337.webp"
+
+      - name: Install Android build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre-headless apksigner zipalign python3-pil
+          curl -fL --retry 3 -o apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
+          java -jar apktool.jar --version
+
+      - name: Decode APK
+        run: java -jar apktool.jar d -f "M1NX VIP V18.apk" -o decoded
+
+      - name: Replace branding, logos and Telegram links
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import xml.etree.ElementTree as ET
+          from PIL import Image, ImageOps
+
+          root = Path("decoded")
+          old_name = re.compile(r"M1NX\\s+VIP", re.I)
+          url_pattern = re.compile(r"https?://(?:www\\.)?(?:t\\.me|telegram\\.me)/[^\\s\"'<>\\\\]+", re.I)
+          tg_pattern = re.compile(r"tg://resolve\\?domain=[A-Za-z0-9_]+(?:&[^\\s\"'<>]*)?", re.I)
+          new_url = "https://t.me/SRPANELZONE"
+          text_ext = {".smali", ".xml", ".json", ".txt", ".html", ".js", ".properties", ".cfg", ".yml", ".yaml", ".java", ".kt"}
+          changed_files = []
+          for p in root.rglob("*"):
+              if not p.is_file() or p.suffix.lower() not in text_ext:
+                  continue
+              try:
+                  original = p.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              updated = old_name.sub("SR Premium 2.0", original)
+              updated = url_pattern.sub(new_url, updated)
+              updated = tg_pattern.sub(new_url, updated)
+              if updated != original:
+                  p.write_text(updated, encoding="utf-8")
+                  changed_files.append(str(p.relative_to(root)))
+
+          manifest = root / "AndroidManifest.xml"
+          tree = ET.parse(manifest)
+          app = tree.getroot().find("application")
+          if app is None:
+              raise SystemExit("AndroidManifest.xml has no application element")
+          ns = "{http://schemas.android.com/apk/res/android}"
+          app.set(ns + "label", "SR Premium 2.0")
+          app.set(ns + "icon", "@drawable/sr_premium_icon")
+          app.set(ns + "roundIcon", "@drawable/sr_premium_icon")
+          tree.write(manifest, encoding="utf-8", xml_declaration=True)
+
+          # Replace raster resources whose names indicate app branding or logos.
+          logo = Image.open("IMG_20261122_191337.webp").convert("RGBA")
+          logo_names = re.compile(r"(logo|launcher|app.?icon|brand|splash)", re.I)
+          replaced_images = []
+          for p in root.rglob("*"):
+              if not p.is_file() or p.suffix.lower() not in {".png", ".webp", ".jpg", ".jpeg"}:
+                  continue
+              if not logo_names.search(p.stem):
+                  continue
+              try:
+                  with Image.open(p) as old:
+                      w, h = old.size
+                      fmt = old.format
+                  if w < 1 or h < 1:
+                      continue
+                  out = ImageOps.fit(logo, (w, h), method=Image.Resampling.LANCZOS)
+                  if p.suffix.lower() in {".jpg", ".jpeg"}:
+                      out = out.convert("RGB")
+                  out.save(p, format=("JPEG" if p.suffix.lower() in {".jpg", ".jpeg"} else ("WEBP" if p.suffix.lower()==".webp" else "PNG")))
+                  replaced_images.append(str(p.relative_to(root)))
+              except Exception:
+                  pass
+
+          icon_dir = root / "res" / "drawable-nodpi"
+          icon_dir.mkdir(parents=True, exist_ok=True)
+          logo.resize((512, 512), Image.Resampling.LANCZOS).save(icon_dir / "sr_premium_icon.png")
+
+          Path("build-report.txt").write_text(
+              "Text files changed: " + str(len(changed_files)) + "\\n" +
+              "\\n".join(changed_files) + "\\n\\nRaster logo/icon candidates replaced: " +
+              str(len(replaced_images)) + "\\n" + "\\n".join(replaced_images) +
+              "\\n\\nNote: encrypted/native code and dynamically fetched remote assets are not modified.\\n",
+              encoding="utf-8"
+          )
+          print(Path("build-report.txt").read_text())
+          PY
+
+      - name: Rebuild APK
+        run: java -jar apktool.jar b decoded -o SR-Premium-2.0-unsigned.apk
+
+      - name: Align and sign APK
+        run: |
+          keytool -genkeypair -v -keystore sr-premium-release.jks -storepass srpremiumpass -keypass srpremiumpass -alias srpremium -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=SR Premium 2.0, OU=App, O=SR Premium, L=Dhaka, S=Dhaka, C=BD"
+          zipalign -p -f 4 SR-Premium-2.0-unsigned.apk SR-Premium-2.0-aligned.apk
+          apksigner sign --ks sr-premium-release.jks --ks-pass pass:srpremiumpass --key-pass pass:srpremiumpass --out SR-Premium-2.0.apk SR-Premium-2.0-aligned.apk
+          apksigner verify --verbose SR-Premium-2.0.apk
+
+      - name: Upload APK and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: SR-Premium-2.0
+          path: |
+            SR-Premium-2.0.apk
+            build-report.txt
+          retention-days: 14
