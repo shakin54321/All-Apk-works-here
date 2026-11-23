@@ -55,6 +55,7 @@ jobs:
               except (UnicodeDecodeError, OSError):
                   continue
               updated = old_name.sub("SR Premium 2.0", original)
+              updated = re.sub(r"(?im)^(\s*Telegram Bot\s*:\s*).*$", r"\1https://t.me/SRPANELZONE", updated)
               updated = url_pattern.sub(new_url, updated)
               updated = tg_pattern.sub(new_url, updated)
               if updated != original:
