@@ -43,21 +43,62 @@ jobs:
           root = Path("decoded")
           target = "https://t.me/SRPANELZONE"
 
-          # Update app-name string resources.
+          # Collect old app-brand strings, then rename app-title resources.
+          brand_tokens = set()
           for xml in (root / "res").glob("values*/strings.xml"):
               try:
                   tree = ET.parse(xml)
                   changed = False
                   for item in tree.getroot().iter("string"):
-                      if item.get("name", "").lower() in {
-                          "app_name", "appname", "application_name", "app_name_short"
+                      key = item.get("name", "").lower()
+                      if key in {
+                          "app_name", "appname", "application_name", "app_name_short",
+                          "app_title", "application_title", "launcher_name"
                       }:
+                          if item.text and item.text.strip():
+                              brand_tokens.add(item.text.strip())
                           item.text = "Shakin X Win"
                           changed = True
                   if changed:
                       tree.write(xml, encoding="utf-8", xml_declaration=True)
               except (ET.ParseError, OSError):
                   pass
+
+          # Also collect the existing manifest label, including @string references.
+          manifest = root / "AndroidManifest.xml"
+          if manifest.exists():
+              manifest_text = manifest.read_text(encoding="utf-8")
+              match = re.search(r'android:label="([^"]+)"', manifest_text)
+              if match:
+                  old_label = match.group(1)
+                  if old_label.startswith("@string/"):
+                      key = old_label.split("/", 1)[1]
+                      for xml in (root / "res").glob("values*/strings.xml"):
+                          try:
+                              tree = ET.parse(xml)
+                              for item in tree.getroot().iter("string"):
+                                  if item.get("name") == key and item.text:
+                                      brand_tokens.add(item.text.strip())
+                          except (ET.ParseError, OSError):
+                              pass
+                  elif not old_label.startswith("@"):
+                      brand_tokens.add(old_label)
+
+          # Replace exact old app-brand names in decoded UI/resources and smali text.
+          # Do not rewrite binary assets or unrelated feature labels.
+          for path in root.rglob("*"):
+              if not path.is_file():
+                  continue
+              try:
+                  data = path.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              updated = data
+              for old in sorted(brand_tokens, key=len, reverse=True):
+                  if old and old.lower() != "shakin x win":
+                      updated = updated.replace(old, "Shakin X Win")
+              if updated != data:
+                  path.write_text(updated, encoding="utf-8")
 
           # Set a literal or resource application label in the decoded manifest.
           manifest = root / "AndroidManifest.xml"
