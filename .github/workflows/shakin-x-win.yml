@@ -22,7 +22,11 @@ jobs:
       - name: Install Android build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y apktool apksigner imagemagick python3-pil
+          sudo apt-get install -y apksigner imagemagick python3-pil curl
+          sudo curl -fsSL https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -o /usr/local/bin/apktool
+          sudo curl -fsSL https://github.com/iBotPeaches/Apktool/releases/download/v2.11.1/apktool_2.11.1.jar -o /usr/local/bin/apktool.jar
+          sudo chmod +x /usr/local/bin/apktool
+          apktool --version
 
       - name: Verify input files
         run: |
