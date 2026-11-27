@@ -1,0 +1,138 @@
+name: Shakin X Win APK Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Ttbyebhe.apk'
+      - 'IMG_20261122_191337.webp'
+      - '.github/workflows/shakin-x-win.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  rebrand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Android build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apktool apksigner imagemagick python3-pil
+
+      - name: Verify input files
+        run: |
+          test -s Ttbyebhe.apk
+          test -s IMG_20261122_191337.webp
+
+      - name: Decode APK
+        run: apktool d -f Ttbyebhe.apk -o decoded
+
+      - name: Apply Shakin X Win branding
+        run: |
+          cat > /tmp/rebrand.py <<'PY'
+          from pathlib import Path
+          import re
+          import xml.etree.ElementTree as ET
+          from PIL import Image
+
+          root = Path("decoded")
+          target = "https://t.me/SRPANELZONE"
+
+          # Update app-name string resources.
+          for xml in (root / "res").glob("values*/strings.xml"):
+              try:
+                  tree = ET.parse(xml)
+                  changed = False
+                  for item in tree.getroot().iter("string"):
+                      if item.get("name", "").lower() in {
+                          "app_name", "appname", "application_name", "app_name_short"
+                      }:
+                          item.text = "Shakin X Win"
+                          changed = True
+                  if changed:
+                      tree.write(xml, encoding="utf-8", xml_declaration=True)
+              except (ET.ParseError, OSError):
+                  pass
+
+          # Set a literal or resource application label in the decoded manifest.
+          manifest = root / "AndroidManifest.xml"
+          if manifest.exists():
+              text = manifest.read_text(encoding="utf-8")
+              text = re.sub(
+                  r'android:label="[^"]+"',
+                  'android:label="Shakin X Win"',
+                  text,
+                  count=1
+              )
+              manifest.write_text(text, encoding="utf-8")
+
+          # Replace common social-network URLs in decoded text/resources.
+          social = re.compile(
+              r'https?://(?:www\.)?(?:t\.me|telegram\.me|wa\.me|whatsapp\.com|'
+              r'discord\.gg|discord\.com|facebook\.com|fb\.com|instagram\.com|'
+              r'youtube\.com|youtu\.be|tiktok\.com|twitter\.com|x\.com)/[^\s"\'<>]*',
+              re.IGNORECASE
+          )
+          for path in root.rglob("*"):
+              if not path.is_file():
+                  continue
+              try:
+                  data = path.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              replaced = social.sub(target, data)
+              if replaced != data:
+                  path.write_text(replaced, encoding="utf-8")
+
+          # Replace raster launcher/app icons while preserving each file's dimensions.
+          logo = Image.open("IMG_20261122_191337.webp").convert("RGBA")
+          icon_names = re.compile(
+              r'(?:ic_launcher|launcher|app_icon|ic_app_icon)', re.IGNORECASE
+          )
+          replaced_icons = 0
+          for path in (root / "res").rglob("*"):
+              if not path.is_file() or path.suffix.lower() not in {
+                  ".png", ".webp", ".jpg", ".jpeg"
+              }:
+                  continue
+              if not icon_names.search(path.stem):
+                  continue
+              try:
+                  with Image.open(path) as old:
+                      size = old.size
+                  resized = logo.resize(size, Image.Resampling.LANCZOS)
+                  if path.suffix.lower() in {".jpg", ".jpeg"}:
+                      resized = resized.convert("RGB")
+                  fmt = {
+                      ".png": "PNG", ".webp": "WEBP",
+                      ".jpg": "JPEG", ".jpeg": "JPEG"
+                  }[path.suffix.lower()]
+                  resized.save(path, format=fmt)
+                  replaced_icons += 1
+              except Exception as exc:
+                  print(f"Skipping icon {path}: {exc}")
+          print(f"Replaced {replaced_icons} raster launcher/app icon files.")
+          PY
+          /usr/bin/python3 /tmp/rebrand.py
+
+      - name: Rebuild APK
+        run: apktool b decoded -o Shakin-X-Win-unsigned.apk
+
+      - name: Sign APK
+        run: |
+          keytool -genkeypair -v             -keystore shakin-build.jks             -storepass android -keypass android             -alias shakin -keyalg RSA -keysize 2048 -validity 10000             -dname "CN=Shakin X Win, OU=Build, O=Shakin, L=Dhaka, S=Dhaka, C=BD"
+          apksigner sign             --ks shakin-build.jks             --ks-key-alias shakin             --ks-pass pass:android             --key-pass pass:android             --out Shakin-X-Win.apk             Shakin-X-Win-unsigned.apk
+          apksigner verify --verbose Shakin-X-Win.apk
+
+      - name: Upload rebuilt APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shakin-X-Win-APK
+          path: Shakin-X-Win.apk
+          if-no-files-found: error
+          retention-days: 30
